@@ -1,0 +1,18 @@
+name: petclinic-by-chesno
+services:
+  petclinic:
+    # Official project image, immutable linux/amd64 digest resolved 2026-10-13.
+    # Image provenance does not prove equality with the source contract: see docs/contract/README.md.
+    image: ${PETCLINIC_IMAGE:-springcommunity/spring-petclinic-rest@sha256:67bd566c74e226b8d9873055387208a237b81cad79b6d18b534d20515b3bf0c7}
+    platform: linux/amd64
+    ports:
+      - "127.0.0.1:${PETCLINIC_PORT:-9966}:9966"
+    environment:
+      SPRING_PROFILES_ACTIVE: h2,spring-data-jpa
+      PETCLINIC_SECURITY_ENABLE: "false"
+      SPRING_DATASOURCE_URL: jdbc:h2:mem:petclinic;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    # No host directories, Docker socket, secrets or persistent database volumes.
