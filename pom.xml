@@ -12,7 +12,7 @@
     <groupId>io.github.chesno</groupId>
     <artifactId>petclinic-api-tests-by-chesno</artifactId>
     <version>1.0.0-SNAPSHOT</version>
-    <name>API-тесты PetClinic — Андрей Чесно</name>
+    <name>API-тесты PetClinic</name>
     <description>Независимые API-тесты Spring PetClinic REST на основе контракта OpenAPI</description>
     <developers>
         <developer><name>Андрей Чесно</name></developer>
