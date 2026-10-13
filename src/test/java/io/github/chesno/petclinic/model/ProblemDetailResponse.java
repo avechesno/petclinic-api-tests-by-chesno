@@ -6,6 +6,6 @@ import java.util.List;
 
 public record ProblemDetailResponse(URI type, String title, Integer status, String detail,
                                     Instant timestamp, List<ValidationMessage> schemaValidationErrors) {
-    // Only message is required by OpenAPI; field/rejectedValue/defaultMessage are optional extensions.
+    // OpenAPI требует только message; field, rejectedValue и defaultMessage — необязательные расширения.
     public record ValidationMessage(String message, String field, String rejectedValue, String defaultMessage) { }
 }

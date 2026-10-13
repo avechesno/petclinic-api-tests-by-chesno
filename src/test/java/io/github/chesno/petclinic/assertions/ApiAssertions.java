@@ -1,9 +1,8 @@
 package io.github.chesno.petclinic.assertions;
 
 import io.github.chesno.petclinic.client.ApiResponse;
-import io.github.chesno.petclinic.model.OwnerRequest;
-import io.github.chesno.petclinic.model.OwnerResponse;
 import io.github.chesno.petclinic.model.ProblemDetailResponse;
+import io.qameta.allure.Allure;
 import java.util.Locale;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -12,47 +11,50 @@ public final class ApiAssertions {
     private ApiAssertions() { }
 
     public static void status(ApiResponse response, int expected) {
-        assertThat(response.status()).as("HTTP status defined by the pinned OpenAPI contract").isEqualTo(expected);
+        assertThat(response.status()).as("Ожидаемый HTTP-код ответа").isEqualTo(expected);
     }
 
     public static void json(ApiResponse response) {
         assertThat(response.contentType().split(";", 2)[0].trim().toLowerCase(Locale.ROOT))
-                .as("Content-Type defined by OpenAPI").isEqualTo("application/json");
+                .as("Тип содержимого JSON-ответа").isEqualTo("application/json");
     }
 
-    public static OwnerResponse owner(ApiResponse response, int expectedStatus, OwnerRequest expected, Integer expectedId) {
-        // Status and media type before deserialization: HTML/error responses cannot masquerade as Owner.
-        status(response, expectedStatus);
-        json(response);
-        OwnerResponse actual = response.bodyAs(OwnerResponse.class);
-        assertThat(actual).as("Owner response body").isNotNull();
-        assertAll("Owner ID, all editable fields and pets",
-                () -> assertThat(actual.id()).as("assigned ID").isNotNull().isNotNegative(),
-                () -> { if (expectedId != null) assertThat(actual.id()).isEqualTo(expectedId); },
-                () -> assertThat(actual.fields()).as("persisted fields vs sent request").isEqualTo(expected),
-                () -> assertThat(actual.pets()).as("new owner's pets").isNotNull().isEmpty());
-        return actual;
+    public static void problemJson(ApiResponse response) {
+        assertThat(response.contentType().split(";", 2)[0].trim().toLowerCase(Locale.ROOT))
+                .as("Тип содержимого ответа ProblemDetail").isEqualTo("application/problem+json");
+    }
+
+    public static void emptyBody(ApiResponse response, int expectedStatus) {
+        Allure.step("Проверить HTTP " + expectedStatus + " и отсутствие тела ответа", () -> {
+            status(response, expectedStatus);
+            assertThat(response.body()).as("Пустое тело ответа HTTP " + expectedStatus).isBlank();
+        });
     }
 
     public static ProblemDetailResponse problem(ApiResponse response, int expectedStatus) {
-        status(response, expectedStatus);
-        json(response);
-        return problemBody(response, expectedStatus);
+        return Allure.step("Проверить HTTP " + expectedStatus + " и типизированное описание ошибки ProblemDetail", () -> {
+            status(response, expectedStatus);
+            problemJson(response);
+            return problemBody(response, expectedStatus);
+        });
     }
 
     public static ProblemDetailResponse problemBody(ApiResponse response, int expectedStatus) {
         status(response, expectedStatus);
-        // Independent body check: callers still assert the exact contract Content-Type separately.
-        // A media-type defect must not hide missing/wrong business error fields.
+        // Тело проверяется независимо; соответствие Content-Type проверяется отдельно.
+        // Неверный тип содержимого не должен скрывать отсутствующие или некорректные поля описания ошибки.
         ProblemDetailResponse actual = response.bodyAs(ProblemDetailResponse.class);
-        assertThat(actual).isNotNull();
-        assertAll("Required ProblemDetail fields",
-                () -> assertThat(actual.status()).isEqualTo(expectedStatus),
-                () -> { assertThat(actual.type()).isNotNull(); assertThat(actual.type().isAbsolute()).isTrue(); },
-                () -> assertThat(actual.title()).isNotBlank(),
-                () -> assertThat(actual.detail()).isNotBlank(),
-                () -> assertThat(actual.timestamp()).isNotNull(),
-                () -> assertThat(actual.schemaValidationErrors()).isNotNull());
+        assertThat(actual).as("Тело ответа с описанием ошибки ProblemDetail").isNotNull();
+        assertAll("Обязательные поля описания ошибки ProblemDetail",
+                () -> assertThat(actual.status()).as("Код ошибки в поле status").isEqualTo(expectedStatus),
+                () -> {
+                    assertThat(actual.type()).as("URI типа ошибки в поле type").isNotNull();
+                    assertThat(actual.type().isAbsolute()).as("Абсолютный URI в поле type").isTrue();
+                },
+                () -> assertThat(actual.title()).as("Заголовок ошибки в поле title").isNotBlank(),
+                () -> assertThat(actual.detail()).as("Описание ошибки в поле detail").isNotBlank(),
+                () -> assertThat(actual.timestamp()).as("Время ошибки в поле timestamp").isNotNull(),
+                () -> assertThat(actual.schemaValidationErrors()).as("Список ошибок в поле schemaValidationErrors").isNotNull());
         return actual;
     }
 }

@@ -2,6 +2,7 @@ package io.github.chesno.petclinic.tests;
 
 import io.github.chesno.petclinic.client.PetclinicClient;
 import io.github.chesno.petclinic.config.TestConfiguration;
+import io.github.chesno.petclinic.steps.OwnerSteps;
 import io.github.chesno.petclinic.support.OwnerTracker;
 import io.qameta.allure.Allure;
 import org.junit.jupiter.api.AfterEach;
@@ -14,14 +15,18 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest(classes = TestConfiguration.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
 abstract class BaseApiTest {
     @Autowired protected PetclinicClient client;
-    protected OwnerTracker owners;
+    private OwnerTracker owners;
+    protected OwnerSteps steps;
 
     @BeforeEach
-    void startOwnershipJournal() { owners = new OwnerTracker(client); }
+    void startOwnershipJournal() {
+        owners = new OwnerTracker(client);
+        steps = new OwnerSteps(client, owners);
+    }
 
     @AfterEach
     void cleanupOwnedData() {
-        // JUnit preserves the test failure AND any teardown failure; no swallowing, no early return on failure.
-        if (owners != null) Allure.step("Cleanup: remove only test-owned data and verify GET 404", owners::cleanup);
+        // JUnit сохраняет и исходное падение теста, и ошибку очистки: исключения не скрываем, очистку не пропускаем.
+        if (owners != null) Allure.step("Очистить данные текущего теста и подтвердить отсутствие записей через GET 404", owners::cleanup);
     }
 }

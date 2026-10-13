@@ -24,7 +24,7 @@ public class PetclinicClient {
     }
 
     private RequestSpecification request() {
-        // Per-request specifications: no mutable global RestAssured.baseURI/authentication/filters.
+        // Каждый запрос получает собственную спецификацию; глобальные настройки RestAssured не изменяем.
         return RestAssured.given().baseUri(properties.baseUrl()).accept(ContentType.JSON)
                 .config(RestAssuredConfig.config()
                         .httpClient(HttpClientConfig.httpClientConfig()
@@ -33,10 +33,12 @@ public class PetclinicClient {
                         .objectMapperConfig(ObjectMapperConfig.objectMapperConfig()
                                 .jackson2ObjectMapperFactory((type, charset) -> mapper)))
                 .redirects().follow(false)
-                .filter(new AllureRestAssured())
+                .filter(new AllureRestAssured()
+                        .setRequestAttachmentName("HTTP-запрос")
+                        .setResponseAttachmentName("HTTP-ответ"))
                 .filter((req, res, context) -> {
                     var response = context.next(req, res);
-                    LOG.info("{} {} -> {}", req.getMethod(), req.getURI(), response.statusCode());
+                    LOG.info("HTTP-запрос: {} {}; код ответа: {}", req.getMethod(), req.getURI(), response.statusCode());
                     return response;
                 });
     }

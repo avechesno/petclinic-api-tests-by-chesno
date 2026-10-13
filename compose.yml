@@ -1,8 +1,8 @@
 name: petclinic-by-chesno
 services:
   petclinic:
-    # Official project image, immutable linux/amd64 digest resolved 2026-10-13.
-    # Image provenance does not prove equality with the source contract: see docs/contract/README.md.
+    # Образ из репозитория проекта; неизменяемый digest для linux/amd64 зафиксирован 2026-10-13.
+    # Происхождение образа не доказывает соответствие контракту: см. docs/contract/README.md.
     image: ${PETCLINIC_IMAGE:-springcommunity/spring-petclinic-rest@sha256:67bd566c74e226b8d9873055387208a237b81cad79b6d18b534d20515b3bf0c7}
     platform: linux/amd64
     ports:
@@ -15,4 +15,4 @@ services:
       - ALL
     security_opt:
       - no-new-privileges:true
-    # No host directories, Docker socket, secrets or persistent database volumes.
+    # Каталоги хоста, сокет Docker, секреты и постоянные тома базы данных не подключаются.
