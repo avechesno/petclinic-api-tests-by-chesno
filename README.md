@@ -7,7 +7,7 @@
 ## Покрытие
 
 - health check: `GET /actuator/health`, HTTP 200 и `status=UP`;
-- полный CRUD для owner: POST -> GET -> PUT -> DELETE -> GET;
+- полный CRUD для owner: POST --> GET --> PUT --> DELETE --> GET;
 - негативное создание owner с проверкой HTTP-кода и тела ошибки валидации.
 
 ## Технологии и версии
